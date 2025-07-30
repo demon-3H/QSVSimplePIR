@@ -190,6 +190,15 @@ func QSV(p Params,A *Matrix,secret *Matrix,err *Matrix,qindex int) uint64{
 	} else{
 		return 1
 	}
+	t1_sum:=SumUint64Array(t1)
+	fi_sum:=SumUint64Array(f1)
+	if sub(fi_sum,p.Delta())==mul(t1_sum,change){
+		fmt.Printf("等式一验证通过\n")
+		return 0
+	}else{
+		fmt.Printf("等式一验证不通过\n")
+		return 1
+	}
 	//计算等式右边
 	right :=vrs(change,h21, h11 )
 	right1:=extractColumn(right,0)
@@ -224,7 +233,7 @@ func QSV2(p Params){
 
 	//查询明文向量 
 	qindex:=11
-	plaint := oneHot(int(p.M),qindex)
+	plaint := oneHoterr(int(p.M),qindex)
 
 	//查询密文向量
 	query := MatrixMul(A, secret)
@@ -385,6 +394,13 @@ func QSV2(p Params){
 	} else{
 		fmt.Printf("承若验证不通过\n")
 	}
+	t1_sum:=SumUint64Array(t1)
+	fi_sum:=SumUint64Array(f1)
+	if sub(fi_sum,p.Delta())==mul(t1_sum,change){
+		fmt.Printf("等式一验证通过\n")
+	}else{
+		fmt.Printf("等式一验证不通过\n")
+	}
 	//计算等式右边
 	right :=vrs(change,h21, h11 )
 	right1:=extractColumn(right,0)
@@ -397,11 +413,19 @@ func QSV2(p Params){
 	elapsed := time.Since(start)
     fmt.Println("运行时间:", elapsed)
 	if allEqual(right1,left1){
-		fmt.Printf("验证通过\n")
+		fmt.Printf("等式二验证通过\n")
 	}else{
-		fmt.Printf("验证失败\n")
+		fmt.Printf("等式二验证失败\n")
 	}
 }
+func SumUint64Array(arr []uint64) uint64 {
+	var sum uint64 = 0
+	for _, v := range arr {
+		sum += v
+	}
+	return sum
+}
+
 func EqualBytes(a, b []byte) bool {
 	if len(a) != len(b) {
 		return false
@@ -482,11 +506,20 @@ func oneHot(x int, y int) []uint64 {
 		panic("y 超出范围")
 	}
 	arr := make([]uint64, x)
+	fmt.Printf("设置向量其中一个元素为1")
+	arr[y] = 1
+	return arr
+}
+//恶意明文查询向量生成
+func oneHoterr(x int, y int) []uint64 {
+	if y < 0 || y >= x {
+		panic("y 超出范围")
+	}
+	arr := make([]uint64, x)
 	fmt.Printf("设置向量其中一个元素为2")
 	arr[y] = 2
 	return arr
 }
-
 func convertToIntSlice(cArr []C.Elem) []uint64 {
 	result := make([]uint64, len(cArr))
 	for i, v := range cArr {
